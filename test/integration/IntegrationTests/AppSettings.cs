@@ -1,8 +1,10 @@
 ﻿namespace IntegrationTests
 {
+    using System;
     using System.Collections.Generic;
 
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +42,7 @@
                     .AddEnvironmentVariables("MTS_APP_SETTINGS_");
                 AppSettings.Configuration = builder.Build();
             }
-
+            throw new Exception(string.Join('\n', AppSettings.Configuration.AsEnumerable().Select(kv => kv.Key + ":" + kv.Value)));
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance);
             serviceCollection.AddSingleton<ILoggerProvider>(NullLoggerProvider.Instance);
