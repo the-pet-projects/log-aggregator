@@ -6,8 +6,8 @@ services:
     image: petprojects/log-aggregator:${BUILD_VERSION}
     network_mode: bridge
     environment:
-      - CONSUL_ENVIRONMENT
-      - CONSUL_ADDRESS
+      - 'MTS_APP_SETTINGS_ConsulStoreConfiguration:Environment=${CONSUL_ENVIRONMENT}'
+      - 'MTS_APP_SETTINGS_ConsulClientConfiguration:Address=${CONSUL_ADDRESS}'
     build:
       context: ./src/Presentation.ConsoleApplication
       dockerfile: Dockerfile
