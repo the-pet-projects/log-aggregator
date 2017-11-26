@@ -3,6 +3,7 @@
     using System;
     using System.IO;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -124,6 +125,9 @@
             Program.QuitEvent.WaitOne();
 
             logger.LogCritical("LogAggregator Ended...");
+
+            // wait 2 seconds for previous log to reach the sink
+            Task.Delay(TimeSpan.FromMilliseconds(2000)).Wait();
         }
     }
 }

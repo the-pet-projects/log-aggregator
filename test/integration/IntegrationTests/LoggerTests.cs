@@ -51,7 +51,7 @@ namespace IntegrationTests
                     }
                 }
 
-                Assert.Fail("Reached maximum number of assert retries.");
+                Assert.Fail("Reached maximum number of assert retries. Type = " + AssemblyInitialize.TypeName + ", Topic = " + AppSettings.Current.Topic + ", Brokers = " + AppSettings.Current.Brokers);
             }
         }
     }
