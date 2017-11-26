@@ -19,8 +19,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
-    <PackageReference Include="PetProjects.Framework.Consul" Version="0.9.17329.2" />
+    <PackageReference Include="PetProjects.Framework.Consul" Version="0.9.17330.3-beta" />
     <PackageReference Include="PetProjects.Framework.Logging.Consumer.ElasticSearch" Version="0.9.17330.3-beta" />
     <PackageReference Include="PetProjects.Framework.Logging.Producer" Version="0.9.17329.6-beta" />
   </ItemGroup>

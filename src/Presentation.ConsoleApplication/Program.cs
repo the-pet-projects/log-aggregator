@@ -8,9 +8,7 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using PetProjects.Framework.Consul;
-    using PetProjects.Framework.Consul.Client;
     using PetProjects.Framework.Consul.Store;
-    using PetProjects.Framework.Consul.Watcher;
     using PetProjects.Framework.Logging.Consumer.ElasticSearch;
     using PetProjects.Framework.Logging.Producer;
     using Serilog.Events;
@@ -43,7 +41,8 @@
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .AddEnvironmentVariables("MTS_APP_SETTINGS_");
 
             Configuration = builder.Build();
         }
@@ -80,7 +79,7 @@
 
         private static void SetupLogging(IServiceCollection serviceCollection)
         {
-            SetupConsul(serviceCollection);
+            serviceCollection.AddPetProjectConsulServices(Configuration, true);
 
             serviceCollection.AddSingleton<ILogger>(NullLogger.Instance);
 
@@ -106,30 +105,6 @@
 
                 serviceCollection.AddLogging(builder => builder.AddPetProjectLogging(logLevel, sinkConfig, kafkaConfig, logType, true));
             }
-        }
-
-        private static void SetupConsul(IServiceCollection serviceCollection)
-        {
-            var consulClientConfig = Configuration.GetSection("ConsulClientConfiguration");
-            var consulWatcherConfig = Configuration.GetSection("ConsulWatcherConfiguration");
-
-            serviceCollection.AddSingleton<IInitialKeyValuesProvider<string>>(Configuration.ToInitialKeyValuesProvider());
-            serviceCollection.AddSingleton<IWatcherConfiguration>(new WatcherConfiguration
-            {
-                BlockingQueryTimeout = TimeSpan.FromMilliseconds(consulWatcherConfig.GetValue<long>("BlockingQueryTimeoutMs")),
-                DelayBetweenFailedRequests = TimeSpan.FromMilliseconds(consulWatcherConfig.GetValue<long>("DelayBetweenFailedRequestsMs"))
-            });
-            serviceCollection.AddSingleton<IConsulClientConfiguration>(new ConsulClientConfiguration
-            {
-                Address = consulClientConfig.GetValue<string>("Address"),
-                ClientTimeout = TimeSpan.FromMilliseconds(consulClientConfig.GetValue<long>("ClientTimeoutMs"))
-            });
-
-            serviceCollection.AddSingleton<IStoreConfiguration>(Configuration.GetSection("ConsulStoreConfiguration").Get<StoreConfiguration>());
-            serviceCollection.AddTransient<IConsulClientFactory, ConsulClientFactory>();
-            serviceCollection.AddSingleton<Consul.IKVEndpoint>(sp => sp.GetRequiredService<IConsulClientFactory>().Create(sp.GetRequiredService<IConsulClientConfiguration>()).KV);
-            serviceCollection.AddTransient<IKeyValueWatcher, ConsulKeyValueWatcher>();
-            serviceCollection.AddSingleton<IStringKeyValueStore, ConsulStringKeyValueStore>();
         }
 
         private static void Run(IServiceProvider scopedProvider)
