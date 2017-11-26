@@ -1,4 +1,4 @@
-FROM microsoft/dotnet-runtime:2.0
+FROM microsoft/dotnet:2.0-runtime
 ARG source
 RUN echo "source: $source"
 
