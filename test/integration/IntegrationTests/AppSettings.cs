@@ -42,7 +42,8 @@
                     .AddEnvironmentVariables("MTS_APP_SETTINGS_");
                 AppSettings.Configuration = builder.Build();
             }
-            throw new Exception(string.Join('\n', AppSettings.Configuration.AsEnumerable().Select(kv => kv.Key + ":" + kv.Value)));
+
+            throw new Exception("env vars:\n" + JsonConvert.SerializeObject(Environment.GetEnvironmentVariables()) + "Config vars:\n" + string.Join('\n', AppSettings.Configuration.AsEnumerable().Select(kv => kv.Key + ":" + kv.Value)));
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance);
             serviceCollection.AddSingleton<ILoggerProvider>(NullLoggerProvider.Instance);
