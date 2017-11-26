@@ -1,8 +1,8 @@
 version: '2'
 
 services:
-  logaggregator:
-    container_name: logaggregator
+  log-aggregator:
+    container_name: log-aggregator
     image: petprojects/log-aggregator:${BUILD_VERSION}
     network_mode: bridge
     environment:
