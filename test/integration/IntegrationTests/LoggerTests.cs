@@ -13,7 +13,7 @@ namespace IntegrationTests
     [TestClass]
     public class LoggerTests
     {
-        private const int NumberOfAssertRetries = 20;
+        private const int NumberOfAssertRetries = 40;
         private static readonly TimeSpan DelayBetweenAssertRetries = TimeSpan.FromMilliseconds(250);
 
         [TestMethod]
@@ -23,7 +23,7 @@ namespace IntegrationTests
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.AddPetProjectLogging(
                 LogEventLevel.Verbose, 
-                new PeriodicSinkConfiguration {BatchSizeLimit = 5,Period = TimeSpan.FromMilliseconds(5)}, 
+                new PeriodicSinkConfiguration {BatchSizeLimit = 1,Period = TimeSpan.FromMilliseconds(5)}, 
                 new KafkaConfiguration {Brokers = AppSettings.Current.Brokers.Split(','), Topic = AppSettings.Current.Topic},
                 AssemblyInitialize.TypeName,
                 true));
