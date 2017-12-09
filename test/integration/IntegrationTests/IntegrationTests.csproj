@@ -26,8 +26,8 @@
     <PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
     <PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
     <PackageReference Include="NEST" Version="5.5.0" />
-    <PackageReference Include="PetProjects.Framework.Consul" Version="0.9.17330.3-beta" />
-    <PackageReference Include="PetProjects.Framework.Logging.Producer" Version="0.9.17330.4-beta" />
+    <PackageReference Include="PetProjects.Framework.Consul" Version="0.9.17330.3" />
+    <PackageReference Include="PetProjects.Framework.Logging.Producer" Version="0.9.17343.4" />
   </ItemGroup>
 
 </Project>

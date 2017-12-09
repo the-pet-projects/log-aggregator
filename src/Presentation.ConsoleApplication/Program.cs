@@ -110,21 +110,27 @@
 
         private static void Run(IServiceProvider scopedProvider)
         {
-            var logger = scopedProvider.GetService<ILoggerFactory>().CreateLogger<Program>();
+            var logger = scopedProvider.GetRequiredService<ILogger<Program>>();
 
             logger.LogCritical("Starting LogAggregator...");
 
             try
             {
-                scopedProvider.StartPetProjectElasticLogConsumer();
-
-                Console.CancelKeyPress += (sender, eArgs) =>
+                Task task;
+                using (var newScope = scopedProvider.CreateScope())
                 {
-                    Program.QuitEvent.Set();
-                    eArgs.Cancel = true;
-                };
+                    task = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync();
 
-                Program.QuitEvent.WaitOne();
+                    Console.CancelKeyPress += (sender, eArgs) =>
+                    {
+                        Program.QuitEvent.Set();
+                        eArgs.Cancel = true;
+                    };
+
+                    Program.QuitEvent.WaitOne();
+                }
+
+                task.Wait();
             }
             catch (Exception ex)
             {
