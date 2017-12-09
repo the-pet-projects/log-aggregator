@@ -104,7 +104,7 @@
                 var logLevel = store.GetAndConvertValue<LogEventLevel>("Logging/LogLevel");
                 var logType = store.GetAndConvertValue<string>("Logging/LogType");
 
-                serviceCollection.AddLogging(builder => builder.AddPetProjectLogging(logLevel, sinkConfig, kafkaConfig, logType, true));
+                serviceCollection.AddLogging(builder => builder.AddPetProjectLogging(logLevel, sinkConfig, kafkaConfig, logType, true).AddConsole());
             }
         }
 
@@ -114,16 +114,23 @@
 
             logger.LogCritical("Starting LogAggregator...");
 
-            scopedProvider.StartPetProjectElasticLogConsumer();
-
-            Console.CancelKeyPress += (sender, eArgs) =>
+            try
             {
-                Program.QuitEvent.Set();
-                eArgs.Cancel = true;
-            };
+                scopedProvider.StartPetProjectElasticLogConsumer();
 
-            Program.QuitEvent.WaitOne();
+                Console.CancelKeyPress += (sender, eArgs) =>
+                {
+                    Program.QuitEvent.Set();
+                    eArgs.Cancel = true;
+                };
 
+                Program.QuitEvent.WaitOne();
+            }
+            catch (Exception ex)
+            {
+                logger.LogCritical(ex, "Fatal Exception occured.");
+            }
+            
             logger.LogCritical("LogAggregator Ended...");
 
             // wait 2 seconds for previous log to reach the sink
