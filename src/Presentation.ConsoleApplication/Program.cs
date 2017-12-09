@@ -58,7 +58,8 @@
                 return new KafkaConfiguration
                 {
                     Brokers = store.GetAndConvertValue<string>("KafkaConfiguration/Brokers").Split(','),
-                    Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic")
+                    Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic"),
+                    ConsumerGroupId = store.GetAndConvertValue<string>("KafkaConfiguration/ConsumerGroupId")
                 };
             });
 
