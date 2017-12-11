@@ -115,7 +115,7 @@
                 IEnumerable<Task> tasks;
                 using (var newScope = scopedProvider.CreateScope())
                 {
-                    tasks = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync().ToList();
+                    tasks = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync();
 
                     Console.CancelKeyPress += (sender, eArgs) =>
                     {

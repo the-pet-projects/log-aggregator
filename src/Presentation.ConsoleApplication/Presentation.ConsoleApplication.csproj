@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="PetProjects.Framework.Consul" Version="0.9.17330.3" />
-    <PackageReference Include="PetProjects.Framework.Logging.Consumer.ElasticSearch" Version="0.9.17345.4" />
+    <PackageReference Include="PetProjects.Framework.Logging.Consumer.ElasticSearch" Version="0.9.17345.6" />
     <PackageReference Include="PetProjects.Framework.Logging.Producer" Version="0.9.17344.3" />
   </ItemGroup>
 

@@ -16,7 +16,7 @@
         {
             Client = new ElasticClient(new Uri(AppSettings.Current.ElasticEndpoint));
 
-            IndexName = $"logs-{ AppSettings.Current.Topic }-{ DateTime.UtcNow.ToString("dd-MM-yyyy") }";
+            IndexName = $"logs-{ AppSettings.Current.Topic.ToLowerInvariant() }-{ DateTime.UtcNow.ToString("dd-MM-yyyy") }";
 
             if (Client.TypeExists(IndexName, AssemblyInitialize.TypeName).Exists)
             {
