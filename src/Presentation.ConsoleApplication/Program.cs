@@ -1,6 +1,7 @@
 ﻿namespace PetProjects.LogAggregator.Presentation.ConsoleApplication
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
@@ -117,10 +118,10 @@
 
             try
             {
-                Task task;
+                IEnumerable<Task> tasks;
                 using (var newScope = scopedProvider.CreateScope())
                 {
-                    task = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync();
+                    tasks = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync();
 
                     Console.CancelKeyPress += (sender, eArgs) =>
                     {
@@ -131,7 +132,7 @@
                     Program.QuitEvent.WaitOne();
                 }
 
-                task.Wait();
+                Task.WhenAll(tasks).Wait();
             }
             catch (Exception ex)
             {
