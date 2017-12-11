@@ -38,7 +38,7 @@ namespace IntegrationTests
                 // Assert
                 for (var i = 0; i < LoggerTests.NumberOfAssertRetries; i++)
                 {
-                    var response = AssemblyInitialize.Client.Search<dynamic>(req => req.Index(AppSettings.Current.IndexName).Type(AssemblyInitialize.TypeName).Query(q => q.Type(t => t.Value(AssemblyInitialize.TypeName))));
+                    var response = AssemblyInitialize.Client.Search<dynamic>(req => req.Index(AssemblyInitialize.IndexName).Type(AssemblyInitialize.TypeName).Query(q => q.Type(t => t.Value(AssemblyInitialize.TypeName))));
                     var docs = response.Documents.Select(d => JsonConvert.SerializeObject(d));
                     try
                     {
@@ -51,7 +51,7 @@ namespace IntegrationTests
                     }
                 }
 
-                Assert.Fail("Reached maximum number of assert retries. Type = " + AssemblyInitialize.TypeName + ", Topic = " + AppSettings.Current.Topic + ", Brokers = " + AppSettings.Current.Brokers);
+                Assert.Fail("Reached maximum number of assert retries. Type = " + AssemblyInitialize.TypeName + ", Topic = " + AppSettings.Current.Topic + ", Brokers = " + AppSettings.Current.Brokers + ", Index = " + AssemblyInitialize.IndexName);
             }
         }
     }

@@ -3,10 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using PetProjects.Framework.Consul;
@@ -30,12 +32,24 @@
 
             // Setup DI container
             var serviceCollection = new ServiceCollection();
-            Program.SetupServices(serviceCollection);
+            Program.SetupServices(serviceCollection, GetConfigurationKeyValueStore());
 
             // Do the actual work here
             using (var parentServiceProvider = serviceCollection.BuildServiceProvider())
             {
                 Program.Run(parentServiceProvider);
+            }
+        }
+        
+        private static IStringKeyValueStore GetConfigurationKeyValueStore()
+        {
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddPetProjectConsulServices(Program.Configuration, true);
+            serviceCollection.AddSingleton<ILogger>(NullLogger.Instance);
+
+            using (var tempProvider = serviceCollection.BuildServiceProvider())
+            {
+                return tempProvider.GetRequiredService<IStringKeyValueStore>();
             }
         }
 
@@ -49,65 +63,45 @@
             Configuration = builder.Build();
         }
 
-        private static void SetupServices(IServiceCollection serviceCollection)
+        private static void SetupServices(IServiceCollection serviceCollection, IStringKeyValueStore store)
         {
-            SetupLogging(serviceCollection);
+            SetupLogging(serviceCollection, store);
 
-            serviceCollection.AddSingleton<KafkaConfiguration>(sp =>
+            var kafkaConfig = new KafkaConfiguration
             {
-                var store = sp.GetRequiredService<IStringKeyValueStore>();
-                return new KafkaConfiguration
-                {
-                    Brokers = store.GetAndConvertValue<string>("KafkaConfiguration/Brokers").Split(','),
-                    Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic"),
-                    ConsumerGroupId = store.GetAndConvertValue<string>("KafkaConfiguration/ConsumerGroupId")
-                };
-            });
+                Brokers = store.GetAndConvertValue<string>("KafkaConfiguration/Brokers").Split(','),
+                Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic"),
+                ConsumerGroupId = store.GetAndConvertValue<string>("KafkaConfiguration/ConsumerGroupId")
+            };
 
-            serviceCollection.AddSingleton<ElasticClientConfiguration>(sp =>
+            var elasticConfig = new ElasticClientConfiguration
             {
-                var store = sp.GetRequiredService<IStringKeyValueStore>();
-                return new ElasticClientConfiguration
-                {
-                    Address = store.GetAndConvertValue<string>("ElasticConfiguration/Address"),
-                    AppLogsIndex = store.GetAndConvertValue<string>("ElasticConfiguration/AppLogsIndex")
-                };
-            });
-
-            serviceCollection.AddSingleton<ElasticStoreConfiguration>(sp => sp.GetRequiredService<ElasticClientConfiguration>());
+                Address = store.GetAndConvertValue<string>("ElasticConfiguration/Address")
+            };
 
             // this call must happen after previous two (addsingleton of kafkaconfig + elasticconfig)
-            serviceCollection.AddPetProjectElasticLogConsumer(new KafkaConfiguration(), new ElasticClientConfiguration());
+            serviceCollection.AddPetProjectElasticLogConsumer(kafkaConfig, elasticConfig);
         }
 
-        private static void SetupLogging(IServiceCollection serviceCollection)
+        private static void SetupLogging(IServiceCollection serviceCollection, IStringKeyValueStore store)
         {
-            serviceCollection.AddPetProjectConsulServices(Configuration, true);
-
-            serviceCollection.AddSingleton<ILogger>(NullLogger.Instance);
-
-            using (var tempProvider = serviceCollection.BuildServiceProvider())
+            var kafkaConfig = new Framework.Logging.Producer.KafkaConfiguration
             {
-                var store = tempProvider.GetRequiredService<IStringKeyValueStore>();
-                serviceCollection.Remove(new ServiceDescriptor(typeof(ILogger), NullLogger.Instance));
+                Brokers = store.GetAndConvertValue<string>("KafkaConfiguration/Brokers").Split(','),
+                Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic")
+            };
 
-                var kafkaConfig = new Framework.Logging.Producer.KafkaConfiguration
-                {
-                    Brokers = store.GetAndConvertValue<string>("KafkaConfiguration/Brokers").Split(','),
-                    Topic = store.GetAndConvertValue<string>("KafkaConfiguration/Topic")
-                };
+            var sinkConfig = new PeriodicSinkConfiguration
+            {
+                BatchSizeLimit = store.GetAndConvertValue<int>("Logging/BatchSizeLimit"),
+                Period = TimeSpan.FromMilliseconds(store.GetAndConvertValue<int>("Logging/PeriodMs"))
+            };
 
-                var sinkConfig = new PeriodicSinkConfiguration
-                {
-                    BatchSizeLimit = store.GetAndConvertValue<int>("Logging/BatchSizeLimit"),
-                    Period = TimeSpan.FromMilliseconds(store.GetAndConvertValue<int>("Logging/PeriodMs"))
-                };
+            var logLevel = store.GetAndConvertValue<LogEventLevel>("Logging/LogLevel");
+            var logType = store.GetAndConvertValue<string>("Logging/LogType");
 
-                var logLevel = store.GetAndConvertValue<LogEventLevel>("Logging/LogLevel");
-                var logType = store.GetAndConvertValue<string>("Logging/LogType");
-
-                serviceCollection.AddLogging(builder => builder.AddPetProjectLogging(logLevel, sinkConfig, kafkaConfig, logType, true).AddConsole());
-            }
+            serviceCollection.AddLogging(builder => builder.AddPetProjectLogging(logLevel, sinkConfig, kafkaConfig, logType, true).AddConsole());
+            serviceCollection.TryAddSingleton<ILogger>(sp => sp.GetRequiredService<ILoggerFactory>().CreateLogger("No category"));
         }
 
         private static void Run(IServiceProvider scopedProvider)
@@ -121,7 +115,7 @@
                 IEnumerable<Task> tasks;
                 using (var newScope = scopedProvider.CreateScope())
                 {
-                    tasks = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync();
+                    tasks = newScope.ServiceProvider.StartPetProjectElasticLogConsumerAsync().ToList();
 
                     Console.CancelKeyPress += (sender, eArgs) =>
                     {

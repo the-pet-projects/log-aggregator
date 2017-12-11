@@ -17,9 +17,7 @@
     public class AppSettings
     {
         public string ElasticEndpoint { get; set; }
-
-        public string IndexName { get; set; }
-
+        
         public string Brokers { get; set; }
 
         public string Topic { get; set; }
